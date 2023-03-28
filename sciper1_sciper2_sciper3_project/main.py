@@ -33,10 +33,32 @@ def main(args):
     # Make a validation set (it can overwrite xtest, ytest)
     if not args.test:
         ### WRITE YOUR CODE HERE
-        pass
+        # 80 % of the samples dedicated for training, the rest for validation
+        train_split = np.floor(4/5 * xtrain.shape[0])
+        xval = xtrain[train_split:]
+        xtrain = xtrain[:train_split]
+
+        yval = ytrain[train_split:]
+        ytrain = ytrain[:train_split]
     
     ### WRITE YOUR CODE HERE to do any other data processing
 
+    # Normalization of all the data, using only the mean/std from the training set
+    mean = np.mean(xtrain, axis = 0)
+    std = np.std(xtrain, axis = 0)
+
+    xtrain = normalize_fn(xtrain, mean, std)
+    xtest = normalize_fn(xtest, mean , std)
+
+    if not args.test:
+        xval = normalize_fn(xval, mean, std)
+
+    # Append a bias term to the data
+    xtrain = append_bias_term(xtrain)
+    xtest = append_bias_term(xtest)
+    if not args.test:
+        xval = append_bias_term(xval)
+    
 
     # Dimensionality reduction (FOR MS2!)
     if args.use_pca:
