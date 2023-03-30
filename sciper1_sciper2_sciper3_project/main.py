@@ -34,7 +34,7 @@ def main(args):
     if not args.test:
         ### WRITE YOUR CODE HERE
         # 80 % of the samples dedicated for training, the rest for validation
-        train_split = np.floor(4/5 * xtrain.shape[0])
+        train_split = np.floor(4/5 * xtrain.shape[0]).astype(int)
         xval = xtrain[train_split:]
         xtrain = xtrain[:train_split]
 
@@ -75,8 +75,8 @@ def main(args):
     if args.method == "dummy_classifier":
         method_obj =  DummyClassifier(arg1=1, arg2=2)
 
-    elif ...:  ### WRITE YOUR CODE HERE
-        pass
+    elif args.method == "kmeans":  ### WRITE YOUR CODE HERE
+        method_obj = KMeans(K = args.K)
     
 
     ## 4. Train and evaluate the method
