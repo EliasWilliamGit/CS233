@@ -7,7 +7,7 @@ class LogisticRegression(object):
     """
     Logistic regression classifier.
     """
-    test
+    
     def __init__(self, lr, max_iters=500):
         """
         Initialize the new object (see dummy_methods.py)
