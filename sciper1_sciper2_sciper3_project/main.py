@@ -2,6 +2,7 @@ import argparse
 
 import numpy as np 
 import torch
+import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 
 from src.data import load_data
@@ -85,19 +86,81 @@ def main(args):
     preds_train = method_obj.fit(xtrain, ytrain)
         
     # Predict on unseen data
-    preds = method_obj.predict(xtest)
+    if args.test:
+        preds = method_obj.predict(xtest)
 
+        ## Report results: performance on train and valid/test sets
+        acc = accuracy_fn(preds_train, ytrain)
+        macrof1 = macrof1_fn(preds_train, ytrain)
+        print(f"\nTrain set: accuracy = {acc:.3f}% - F1-score = {macrof1:.6f}")
 
-    ## Report results: performance on train and valid/test sets
-    acc = accuracy_fn(preds_train, ytrain)
-    macrof1 = macrof1_fn(preds_train, ytrain)
-    print(f"\nTrain set: accuracy = {acc:.3f}% - F1-score = {macrof1:.6f}")
+        acc = accuracy_fn(preds, ytest)
+        macrof1 = macrof1_fn(preds, ytest)
+        print(f"Test set:  accuracy = {acc:.3f}% - F1-score = {macrof1:.6f}")
 
-    acc = accuracy_fn(preds, ytest)
-    macrof1 = macrof1_fn(preds, ytest)
-    print(f"Test set:  accuracy = {acc:.3f}% - F1-score = {macrof1:.6f}")
+    if not args.test:
+        preds = method_obj.predict(xval)
+
+        ## Report results: performance on train and valid/test sets
+        acc = accuracy_fn(preds_train, ytrain)
+        macrof1 = macrof1_fn(preds_train, ytrain)
+        print(f"\nTrain set: accuracy = {acc:.3f}% - F1-score = {macrof1:.6f}")
+
+        acc = accuracy_fn(preds, yval)
+        macrof1 = macrof1_fn(preds, yval)
+        print(f"Validation set:  accuracy = {acc:.3f}% - F1-score = {macrof1:.6f}")
+
 
     ### WRITE YOUR CODE HERE if you want to add other outputs, visualization, etc.
+    if not args.visualize:
+        return
+    
+    if args.method == "kmeans":
+        # Calculate accuracy and f1 score based on the vakue of K
+
+        K_values = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
+        acc_train = []
+        acc_val = []
+        f1_train = []
+        f1_val = []
+
+        for K in K_values:
+            print(f'Calculating for K = {K}...')
+            method_obj = KMeans(K = K)
+            preds_train = method_obj.fit(xtrain, ytrain)
+            preds_val = method_obj.predict(xval)
+
+            # Save test accuracy and f1 score
+            acc_train.append(accuracy_fn(preds_train, ytrain))
+            f1_train.append(macrof1_fn(preds_train, ytrain))
+
+            # Save validation accuracy and f1 score
+            acc_val.append(accuracy_fn(preds_val, yval))
+            f1_val.append(macrof1_fn(preds_val, yval))
+
+        # Visualize the accuracies and f1 scores dependent on K
+        fig, ax = plt.subplots(1, 2, figsize=(12, 6))
+        ax[0].plot(K_values, acc_train, color="r", label="Test accuracy")
+        ax[0].plot(K_values, acc_val, color="b", label="Validation accuracy")
+        ax[0].set_xlabel("K")
+        ax[0].set_ylabel("Accuracy")
+        ax[0].legend()
+
+        ax[1].plot(K_values, f1_train, color="r", label="Test f1")
+        ax[1].plot(K_values, f1_val, color="b", label="Validation f1")
+        ax[1].set_xlabel("K")
+        ax[1].set_ylabel("f1 score")
+        ax[1].legend()
+
+        plt.show()
+
+        
+
+
+        
+
+
+
 
 
 if __name__ == '__main__':
@@ -115,6 +178,7 @@ if __name__ == '__main__':
     parser.add_argument('--svm_gamma', type=float, default=1., help="gamma prameter in rbf/polynomial SVM method")
     parser.add_argument('--svm_degree', type=int, default=1, help="degree in polynomial SVM method")
     parser.add_argument('--svm_coef0', type=float, default=0., help="coef0 in polynomial SVM method")
+    parser.add_argument('--visualize', action="store_true", help="Visualize the method with different values for its hyperparameter(s)")
 
     # Feel free to add more arguments here if you need!
 

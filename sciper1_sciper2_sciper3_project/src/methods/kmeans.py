@@ -49,8 +49,8 @@ class KMeans(object):
         # Loop over the iterations
         for i in range(max_iter):
             
-            if ((i+1) % 10 == 0):
-                print(f"Iteration {i+1}/{max_iter}...")
+            """if ((i+1) % 10 == 0):
+                print(f"Iteration {i+1}/{max_iter}...")"""
                 
             old_centers = centers.copy()  # keep in memory the centers of the previous iteration
             
@@ -97,7 +97,7 @@ class KMeans(object):
         ##
 
         self._centers, cluster_assignments = self.k_means(training_data, self.max_iters)
-        print(f'Cluster assignments: {cluster_assignments}')
+        #print(f'Cluster assignments: {cluster_assignments}')
         self._cluster_center_labels = self.__assign_labels_to_centers(self._centers, cluster_assignments, training_labels)
         return self.predict(training_data)
 
