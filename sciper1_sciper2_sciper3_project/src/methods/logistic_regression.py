@@ -1,6 +1,6 @@
 import numpy as np
 
-from ..utils import get_n_classes, label_to_onehot, onehot_to_label
+from ..utils import get_n_classes, label_to_onehot, onehot_to_label, accuracy_fn
 
 class LogisticRegression(object):
     """
@@ -18,6 +18,7 @@ class LogisticRegression(object):
         """
         self.lr = lr
         self.max_iters = max_iters
+        self._weights = 0
         
 
     def fit(self, training_data, training_labels):
@@ -36,7 +37,13 @@ class LogisticRegression(object):
         #### WRITE YOUR CODE HERE! 
         ###
         ##
-        pred_labels = self.logistic_regression_train_multi(self, training_data, training_labels)
+
+        # Convert labels to one-hot representation
+        number_of_classes = get_n_classes(training_labels)
+
+        one_hot_labels = label_to_onehot(training_labels, number_of_classes)
+
+        pred_labels = self.logistic_regression_train_multi(training_data, one_hot_labels)
         
         return pred_labels
         
@@ -56,7 +63,7 @@ class LogisticRegression(object):
         #### WRITE YOUR CODE HERE! 
         ###
         ##
-        pred_labels = self.logistic_regression_predict_multi(self, test_data)
+        pred_labels = self.logistic_regression_predict_multi(test_data, self._weights)
         
         return pred_labels
     
@@ -93,12 +100,12 @@ class LogisticRegression(object):
         Returns:
             grad (np.array): Gradients of shape (D, C)
         """
-    
+
         y = self.f_softmax(data, W)
 
         return data.T @ (y - labels)
     
-    def logistic_regression_predict_multi(self, data):
+    def logistic_regression_predict_multi(self, data, weights):
         """
         Prediction the label of data for multi-class logistic regression.
     
@@ -109,7 +116,7 @@ class LogisticRegression(object):
             array of shape (N,): Label predictions of data.
         """
     
-        y = self.f_softmax(data)
+        y = self.f_softmax(data, weights)
         return np.argmax(y, axis = 1)
     
     def logistic_regression_train_multi(self, data, labels):
@@ -129,17 +136,23 @@ class LogisticRegression(object):
         C = labels.shape[1]  # number of classes
         # Random initialization of the weights
         weights = np.random.normal(0, 0.1, (D, C))
+        print_period=10
 
         for it in range(self.max_iters):
             
             gradient = self.gradient_logistic_multi(data, labels, weights)
+
             weights = weights - self.lr * gradient
-            
-            predictions = self.logistic_regression_predict_multi(data, self.weights)
-            if self.accuracy_fn(predictions, onehot_to_label(labels)) == 100:
+
+            predictions = self.logistic_regression_predict_multi(data, weights)
+            if accuracy_fn(predictions, onehot_to_label(labels)) == 100:
+                print(f"Break at iteration: {it}")
                 break
-            
-        self.weights = weights
+            #logging and plotting
+            if print_period and it % print_period == 0:
+                print('Accuracy at iteration', it, ":", accuracy_fn(predictions, onehot_to_label(labels)))
+        self._weights = weights
+
         return predictions
             
     

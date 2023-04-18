@@ -77,7 +77,10 @@ def main(args):
         method_obj =  DummyClassifier(arg1=1, arg2=2)
 
     elif args.method == "kmeans":  ### WRITE YOUR CODE HERE
-        method_obj = KMeans(K = args.K)
+        method_obj = KMeans(K = args.K, max_iters=args.max_iters)
+
+    elif args.method == "logistic_regression":
+        method_obj = LogisticRegression(lr = args.lr, max_iters=args.max_iters)
     
 
     ## 4. Train and evaluate the method
