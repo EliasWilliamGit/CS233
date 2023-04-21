@@ -160,7 +160,43 @@ def main(args):
         plt.show()
 
     if args.method == "logistic_regression":
-        return
+        lr_values = np.linspace(0.00001,0.01,10)
+        print(lr_values)
+        stop_iters = []
+        acc_val = []
+        f1_val = []
+
+        for lr in lr_values:
+            method_obj = LogisticRegression(lr = lr, max_iters=args.max_iters)
+            _, stop_iter = method_obj.fit_eval(xtrain, ytrain)
+            stop_iters.append(stop_iter)
+            preds = method_obj.predict(xval)
+
+            # Save validation accuracy and f1 score
+            acc_val.append(accuracy_fn(preds, yval))
+            f1_val.append(macrof1_fn(preds, yval))
+
+        # Visualize the amount of iterations needed to converge based on the learning rate
+        # Also visualize the Accuracy on the validation set for different learning rates
+
+        fig, ax = plt.subplots(1, 3, figsize=(12, 6))
+        ax[0].plot(lr_values, stop_iters)
+        ax[0].set_xlabel("Learning rate")
+        ax[0].set_ylabel("Stop iteration")
+        ax[0].set_title('The stop iteration based on learning rate')
+
+        ax[1].plot(lr_values, acc_val)
+        ax[1].set_xlabel("Learning rate")
+        ax[1].set_ylabel("Validation Accuracy")
+
+        ax[2].plot(lr_values, f1_val)
+        ax[2].set_xlabel("Learning rate")
+        ax[2].set_ylabel("Validation f1")
+
+        plt.show()
+
+
+
 
     if args.method == "svm":
         # what should i iterate on to find the best fitting method ? 

@@ -119,7 +119,7 @@ class LogisticRegression(object):
         y = self.f_softmax(data, weights)
         return np.argmax(y, axis = 1)
     
-    def logistic_regression_train_multi(self, data, labels):
+    def logistic_regression_train_multi(self, data, labels, eval= False):
         """
         Training function for multi class logistic regression.
     
@@ -137,6 +137,7 @@ class LogisticRegression(object):
         # Random initialization of the weights
         weights = np.random.normal(0, 0.1, (D, C))
         print_period=10
+        stop_iter = self.max_iters
 
         for it in range(self.max_iters):
             
@@ -147,12 +148,42 @@ class LogisticRegression(object):
             predictions = self.logistic_regression_predict_multi(data, weights)
             if accuracy_fn(predictions, onehot_to_label(labels)) == 100:
                 print(f"Break at iteration: {it}")
+                stop_iter = it
                 break
-            #logging and plotting
+            #logging
             if print_period and it % print_period == 0:
                 print('Accuracy at iteration', it, ":", accuracy_fn(predictions, onehot_to_label(labels)))
         self._weights = weights
 
+        if eval:
+            return predictions, stop_iter
+        
         return predictions
+    
+    def fit_eval(self, training_data, training_labels):
+        """
+        Trains the model, returns predicted labels for training data and also the iteration the algorithm stopped on.
+
+        Arguments:
+            training_data (array): training data of shape (N,D)
+            training_labels (array): regression target of shape (N,)
+        Returns:
+            pred_labels (array): target of shape (N,)
+        """
+
+        ##
+        ###
+        #### WRITE YOUR CODE HERE! 
+        ###
+        ##
+
+        # Convert labels to one-hot representation
+        number_of_classes = get_n_classes(training_labels)
+
+        one_hot_labels = label_to_onehot(training_labels, number_of_classes)
+
+        pred_labels, stop_iter = self.logistic_regression_train_multi(training_data, one_hot_labels, eval=True)
+        
+        return pred_labels, stop_iter
             
     
