@@ -83,7 +83,7 @@ def main(args):
         method_obj = LogisticRegression(lr = args.lr, max_iters=args.max_iters)
 
     elif args.method == "svm":
-        method_obj =  SVM(C = args.svm_c, kernel = args.svm_kernel, gamma = args.svm_gamma, degree = args.svm_degree, coef = args.svm_coef0 )   
+        method_obj =  SVM(C = args.svm_c, kernel = args.svm_kernel, gamma = args.svm_gamma, degree = args.svm_degree, coef0 = args.svm_coef0 )   
 
     ## 4. Train and evaluate the method
 
