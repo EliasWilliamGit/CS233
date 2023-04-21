@@ -2,7 +2,6 @@ import argparse
 
 import numpy as np 
 import torch
-import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 
 from src.data import load_data
@@ -11,7 +10,6 @@ from src.methods.kmeans import KMeans
 from src.methods.logistic_regression import LogisticRegression
 from src.methods.svm import SVM
 from src.utils import normalize_fn, append_bias_term, accuracy_fn, macrof1_fn
-
 
 def main(args):
     """
@@ -34,32 +32,34 @@ def main(args):
     # Make a validation set (it can overwrite xtest, ytest)
     if not args.test:
         ### WRITE YOUR CODE HERE
-        # 80 % of the samples dedicated for training, the rest for validation
-        train_split = np.floor(4/5 * xtrain.shape[0]).astype(int)
-        xval = xtrain[train_split:]
-        xtrain = xtrain[:train_split]
+        ### WRITE YOUR CODE HERE
+        # faut shuffle et checker sur la serie faire la meme
 
-        yval = ytrain[train_split:]
-        ytrain = ytrain[:train_split]
+        # Shuffle the training data
+        np.random.seed(0)
+        permutation = np.random.permutation(xtrain.shape[0])
+        xtrain = xtrain[permutation]
+        ytrain = ytrain[permutation]
+
+        # Split the shuffled training data into training and validation sets
+        num_train = int(0.8 * xtrain.shape[0])  # 80% of data for training
+        xtrain, xval = xtrain[:num_train], xtrain[num_train:]
+        ytrain, yval = ytrain[:num_train], ytrain[num_train:]
+
+        # Normalize the training, validation and test data (if any)
+        means = np.mean(xtest, keepdims=True)
+        stds = np.std(xtest, keepdims=True)
+
+        normalized_xtrain = normalize_fn(xtrain, means, stds)
+        normalized_ytrain = normalize_fn(ytrain, means, stds)
+        normalized_x_val = normalize_fn(xval, means, stds)
+        normalized_y_val = normalize_fn(yval, means, stds)
+        normalized_x_test = normalize_fn(xtest, means, stds)
+        normalized_y_test = normalize_fn(ytest, means, stds)
+        pass
     
     ### WRITE YOUR CODE HERE to do any other data processing
 
-    # Normalization of all the data, using only the mean/std from the training set
-    mean = np.mean(xtrain, axis = 0)
-    std = np.std(xtrain, axis = 0)
-
-    xtrain = normalize_fn(xtrain, mean, std)
-    xtest = normalize_fn(xtest, mean , std)
-
-    if not args.test:
-        xval = normalize_fn(xval, mean, std)
-
-    # Append a bias term to the data
-    xtrain = append_bias_term(xtrain)
-    xtest = append_bias_term(xtest)
-    if not args.test:
-        xval = append_bias_term(xval)
-    
 
     # Dimensionality reduction (FOR MS2!)
     if args.use_pca:
@@ -77,105 +77,53 @@ def main(args):
         method_obj =  DummyClassifier(arg1=1, arg2=2)
 
     elif args.method == "kmeans":  ### WRITE YOUR CODE HERE
-        method_obj = KMeans(K = args.K, max_iters=args.max_iters)
+        method_obj = KMeans(args.K)
 
-    elif args.method == "logistic_regression":
-        method_obj = LogisticRegression(lr = args.lr, max_iters=args.max_iters)
+        pass
 
-    elif args.method == "svm":
-        method_obj =  SVM(C = args.svm_c, kernel = args.svm_kernel, gamma = args.svm_gamma, degree = args.svm_degree, coef = args.svm_coef0 )   
 
     ## 4. Train and evaluate the method
 
     # Fit (:=train) the method on the training data
     preds_train = method_obj.fit(xtrain, ytrain)
-    
+        
     # Predict on unseen data
-    if args.test:
-        preds = method_obj.predict(xtest)
+    preds = method_obj.predict(xtest)
 
-        ## Report results: performance on train and valid/test sets
-        acc = accuracy_fn(preds_train, ytrain)
-        macrof1 = macrof1_fn(preds_train, ytrain)
-        print(f"\nTrain set: accuracy = {acc:.3f}% - F1-score = {macrof1:.6f}")
 
-        acc = accuracy_fn(preds, ytest)
-        macrof1 = macrof1_fn(preds, ytest)
-        print(f"Test set:  accuracy = {acc:.3f}% - F1-score = {macrof1:.6f}")
+    ## Report results: performance on train and valid/test sets
+    acc = accuracy_fn(preds_train, ytrain)
+    macrof1 = macrof1_fn(preds_train, ytrain)
+    print(f"\nTrain set: accuracy = {acc:.3f}% - F1-score = {macrof1:.6f}")
 
-    if not args.test:
-        preds = method_obj.predict(xval)
-
-        ## Report results: performance on train and valid/test sets
-        acc = accuracy_fn(preds_train, ytrain)
-        macrof1 = macrof1_fn(preds_train, ytrain)
-        print(f"\nTrain set: accuracy = {acc:.3f}% - F1-score = {macrof1:.6f}")
-
-        acc = accuracy_fn(preds, yval)
-        macrof1 = macrof1_fn(preds, yval)
-        print(f"Validation set:  accuracy = {acc:.3f}% - F1-score = {macrof1:.6f}")
-
+    acc = accuracy_fn(preds, ytest)
+    macrof1 = macrof1_fn(preds, ytest)
+    print(f"Test set:  accuracy = {acc:.3f}% - F1-score = {macrof1:.6f}")
 
     ### WRITE YOUR CODE HERE if you want to add other outputs, visualization, etc.
-    if not args.visualize:
-        return
-    
+
     if args.method == "kmeans":
-        # Calculate accuracy and f1 score based on the vakue of K
 
-        K_values = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
-        acc_train = []
-        acc_val = []
-        f1_train = []
-        f1_val = []
+        # Call the cross validation method with different k values
 
-        for K in K_values:
-            print(f'Calculating for K = {K}...')
-            method_obj = KMeans(K = K)
-            preds_train = method_obj.fit(xtrain, ytrain)
-            preds_val = method_obj.predict(xval)
+        # Define the hyperparameter values to test.
+        k_values = range(2,50)
 
-            # Save test accuracy and f1 score
-            acc_train.append(accuracy_fn(preds_train, ytrain))
-            f1_train.append(macrof1_fn(preds_train, ytrain))
+        # Run cross-validation for each hyperparameter value.
+        avg_accuracies = []
+        for k in k_values:
+            avg_accuracy = method_obj.KFold_cross_validation_KMeans(xtrain, ytrain, K=5, k=k)
+            avg_accuracies.append(avg_accuracy)
+            print(f"k={k}, average accuracy={avg_accuracy}")
 
-            # Save validation accuracy and f1 score
-            acc_val.append(accuracy_fn(preds_val, yval))
-            f1_val.append(macrof1_fn(preds_val, yval))
+        model_performance = []
+        for k in k_values:
+            # YOUR CODE HERE
+            model_performance.append(method_obj.KFold_cross_validation_KMeans(xtrain, ytrain, K=5, k=k))
 
-        # Visualize the accuracies and f1 scores dependent on K
-        fig, ax = plt.subplots(1, 2, figsize=(12, 6))
-        ax[0].plot(K_values, acc_train, color="r", label="Test accuracy")
-        ax[0].plot(K_values, acc_val, color="b", label="Validation accuracy")
-        ax[0].set_xlabel("K")
-        ax[0].set_ylabel("Accuracy")
-        ax[0].legend()
+        print('best k is :' + k_values[np.argmax(model_performance)])
 
-        ax[1].plot(K_values, f1_train, color="r", label="Test f1")
-        ax[1].plot(K_values, f1_val, color="b", label="Validation f1")
-        ax[1].set_xlabel("K")
-        ax[1].set_ylabel("f1 score")
-        ax[1].legend()
-
-        plt.show()
-
-    if args.method == "logistic_regression":
-        return
-
-    if args.method == "svm":
-        # what should i iterate on to find the best fitting method ? 
-        C = []
-        kernel = []
-        gamma = 1
-        degree = 1
-        coef0 = 0
-        
-
-
-
-
-
-if __name__ == '__main__':
+if _name_ == '_main_':
     # Definition of the arguments that can be given through the command line (terminal).
     # If an argument is not given, it will take its default value as defined below.
     parser = argparse.ArgumentParser()
@@ -190,7 +138,6 @@ if __name__ == '__main__':
     parser.add_argument('--svm_gamma', type=float, default=1., help="gamma prameter in rbf/polynomial SVM method")
     parser.add_argument('--svm_degree', type=int, default=1, help="degree in polynomial SVM method")
     parser.add_argument('--svm_coef0', type=float, default=0., help="coef0 in polynomial SVM method")
-    parser.add_argument('--visualize', action="store_true", help="Visualize the method with different values for its hyperparameter(s)")
 
     # Feel free to add more arguments here if you need!
 
