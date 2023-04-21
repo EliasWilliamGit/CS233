@@ -137,6 +137,9 @@ def main(args):
     ### WRITE YOUR CODE HERE if you want to add other outputs, visualization, etc.
     if not args.visualize:
         return
+    if args.test:
+        print("ERROR: Cannot do visualize and test at the same time")
+        return
     
     if args.method == "kmeans":
         # Calculate accuracy and f1 score based on the vakue of K
