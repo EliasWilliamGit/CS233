@@ -223,7 +223,7 @@ def main(args):
 
     elif args.method == "svm":
         # Define the hyperparameters to be tested
-        param_grid = {'C': [0.1, 1, 10], 'gamma': [0.00099, 0.001, 0.0011], 'kernel': ['linear', 'poly', 'rbf']}
+        param_grid = {'C': [0.001, 0.01, 0.1], 'gamma' : [0.001, 0.01, 0.1], 'kernel': ['poly'], 'coef0': [10, 20, 30]}
 
         # Perform cross-validation
         grid_search = GridSearchCV(SVC(), param_grid, cv=5, scoring='accuracy')
@@ -238,7 +238,7 @@ def main(args):
 
         # Evaluate the final model on the test data
         y_pred = best_svm.predict(xtest)
-        accuracy = accuracy_score(ytest, y_pred)
+        accuracy = accuracy_fn(ytest, y_pred)
         print("Test accuracy: {:.2f}".format(accuracy))
 
 
