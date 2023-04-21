@@ -12,6 +12,13 @@ from src.methods.logistic_regression import LogisticRegression
 from src.methods.svm import SVM
 from src.utils import normalize_fn, append_bias_term, accuracy_fn, macrof1_fn
 
+from sklearn.model_selection import GridSearchCV
+from sklearn.svm import SVC
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+import numpy as np
+
 
 def main(args):
     """
@@ -33,7 +40,19 @@ def main(args):
 
     # Make a validation set (it can overwrite xtest, ytest)
     if not args.test:
-        ### WRITE YOUR CODE HERE
+        
+        # Shuffle the training data
+        np.random.seed(0)
+        shuffled_id = np.random.permutation(xtrain.shape[0])
+        xtrain = xtrain[shuffled_id]
+        ytrain = ytrain[shuffled_id]
+
+        # Split the shuffled training data into training and validation sets
+        num_train = int(0.8 * xtrain.shape[0])  # 80% of data for training
+        xtrain, xval = xtrain[:num_train], xtrain[num_train:]
+        ytrain, yval = ytrain[:num_train], ytrain[num_train:]
+
+
         # 80 % of the samples dedicated for training, the rest for validation
         train_split = np.floor(4/5 * xtrain.shape[0]).astype(int)
         xval = xtrain[train_split:]
@@ -198,17 +217,25 @@ def main(args):
 
 
 
-    if args.method == "svm":
-        # what should i iterate on to find the best fitting method ? 
-        C = []
-        kernel = []
-        gamma = 1
-        degree = 1
-        coef0 = 0
-        
+    elif args.method == "svm":
+        # Define the hyperparameters to be tested
+        param_grid = {'C': [0.1, 1, 10], 'gamma': [0.00099, 0.001, 0.0011], 'kernel': ['linear', 'poly', 'rbf']}
 
+        # Perform cross-validation
+        grid_search = GridSearchCV(SVC(), param_grid, cv=5, scoring='accuracy')
+        grid_search.fit(xtrain, ytrain)
 
+        # Print the best hyperparameters
+        print("Best hyperparameters: ", grid_search.best_params_)
 
+        # Train a final model using the best hyperparameters
+        best_svm = SVC(**grid_search.best_params_)
+        best_svm.fit(xtrain, ytrain)
+
+        # Evaluate the final model on the test data
+        y_pred = best_svm.predict(xtest)
+        accuracy = accuracy_score(ytest, y_pred)
+        print("Test accuracy: {:.2f}".format(accuracy))
 
 
 if __name__ == '__main__':
