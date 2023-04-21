@@ -11,7 +11,7 @@ class SVM(object):
     SVM method.
     """
 
-    def __init__(self, C, kernel, gamma=1., degree=1, coef0=0.):
+    def __init__(self, C, kernel, gamma=1., degree=1, coef0=0.): 
         """
         Initialize the new object (see dummy_methods.py)
         and set its arguments.
@@ -28,22 +28,27 @@ class SVM(object):
         #### WRITE YOUR CODE HERE! 
         ###
         ##
-        
+        self.C = C
+        self.kernel = kernel
+        self.gamma = gamma
+        self.degree = degree
+        self.coef0 = coef0
+        self.clf = None
+
     def fit(self, training_data, training_labels):
         """
         Trains the model by SVM, then returns predicted labels for training data.
 
         Arguments:
             training_data (array): training data of shape (N,D)
-            training_labels (array): regression target of shape (N,)
+            training_labels (array): regression target of shape (N,) 
         Returns:
             pred_labels (array): target of shape (N,)
         """
-        ##
-        ###
-        #### WRITE YOUR CODE HERE! 
-        ###
-        ##
+
+        self.clf = SVC(C = self.C, kernel = self.kernel, degree = self.degree, gamma = self.gamma, coef0 = self.coef0)
+        self.clf.fit(training_data, training_labels)
+
         return self.predict(training_data)
     
     def predict(self, test_data):
@@ -55,9 +60,7 @@ class SVM(object):
         Returns:
             pred_labels (array): labels of shape (N,)
         """
-        ##
-        ###
-        #### WRITE YOUR CODE HERE! 
-        ###
-        ##
+
+        pred_labels = self.clf.predict(test_data)
+
         return pred_labels

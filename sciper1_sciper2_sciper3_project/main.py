@@ -81,13 +81,15 @@ def main(args):
 
     elif args.method == "logistic_regression":
         method_obj = LogisticRegression(lr = args.lr, max_iters=args.max_iters)
-    
+
+    elif args.method == "svm":
+        method_obj =  SVM(C = args.C, kernel = args.kernel)   
 
     ## 4. Train and evaluate the method
 
     # Fit (:=train) the method on the training data
     preds_train = method_obj.fit(xtrain, ytrain)
-        
+    
     # Predict on unseen data
     if args.test:
         preds = method_obj.predict(xtest)
@@ -121,6 +123,7 @@ def main(args):
     if args.method == "kmeans":
         # Calculate accuracy and f1 score based on the vakue of K
 
+        #pourquoi on prend un K si on prend en argument un K
         K_values = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
         acc_train = []
         acc_val = []
@@ -157,11 +160,20 @@ def main(args):
 
         plt.show()
 
+    if args.method == "logistic_regression":
+        return
+
+    if args.method == "svm":
+        # what should i iterate on to find the best fitting method ? 
+        C = []
+        kernel = []
+        gamma = 1
+        degree = 1
+        coef0 = 0
         
 
 
         
-
 
 
 
