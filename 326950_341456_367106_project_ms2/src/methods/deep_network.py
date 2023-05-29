@@ -96,7 +96,6 @@ class CNN(nn.Module):
         ###
         ##
         # Forward pass through the network
-        print(x.shape)
         x = F.relu(self.conv2d1(x))
         x = F.max_pool2d(kernel_size=2, input=x)
         x = F.relu(self.conv2d2(x))
@@ -110,8 +109,7 @@ class CNN(nn.Module):
         return preds
     
     def predict(self, x):
-        print(x)
-        return F.softmax(self.forward(x))
+        return F.softmax(self.forward(x), dim=1)
 
 
 class Trainer(object):
@@ -156,6 +154,7 @@ class Trainer(object):
             self.train_one_epoch(dataloader, ep)
 
             ### WRITE YOUR CODE HERE if you want to do add else at each epoch
+            # TODO: Change learning rate after x epochs, also save loss for visual
 
     def train_one_epoch(self, dataloader, ep):
         """
@@ -173,10 +172,16 @@ class Trainer(object):
         #### WRITE YOUR CODE HERE! 
         ###
         ##
+        acc_run = 0
+        loss_run = 0
         for it, batch in enumerate(dataloader):
             # 5.1 Load a batch, break it down in images and targets.
             x, y = batch
-            y = torch.tensor(y, dtype=torch.int64)
+            # y = torch.tensor(y, dtype=torch.int64)
+            if torch.cuda.is_available():
+                y = y.type(torch.cuda.LongTensor)
+            else:
+                y = y.type(torch.LongTensor)
 
             # 5.2 Run forward pass.
             logits = self.model.forward(x)
@@ -194,11 +199,14 @@ class Trainer(object):
             # 5.6 Zero-out the accumulated gradients.
             self.optimizer.zero_grad()  ### WRITE YOUR CODE HERE^
 
-            # TODO: change this print
-            if it == 0:
-                print('\rEp {}/{}, it {}/{}: loss train: {:.2f}, accuracy train: {:.2f}'.
-                    format(ep + 1, self.epochs, it + 1, len(dataloader), loss,
-                            accuracy_fn(onehot_to_label(logits.detach().numpy()), y.detach().numpy())), end='')
+            curr_bs = x.shape[0]
+            acc_run += accuracy_fn(onehot_to_label(logits.detach().cpu().numpy()), y.detach().cpu().numpy()) * curr_bs
+            loss_run += loss * curr_bs
+
+        acc = acc_run / len(dataloader.dataset)
+        loss_mean = loss_run / len(dataloader.dataset)
+        # Print performance
+        print(f'Ep {ep+ 1}/{self.epochs}: loss train: {loss_mean}, accuracy train: {acc}')
 
 
     def predict_torch(self, dataloader):
@@ -224,23 +232,23 @@ class Trainer(object):
         ###
         ##
 
-        pred_labels = []
-
         # Evaluation mode
         self.model.eval()
+        N = len(dataloader.dataset)
+        pred_labels = torch.zeros(N)
 
         with torch.no_grad():
             # Loop over all batches in the val/test set
             for it, batch in enumerate(dataloader):
                 x = batch[0]
-                print(type(x))
-                pred_label = self.model.predict(x)
-                pred_labels.extend(pred_label)
-                print(pred_label)
 
-        # Convert to tensor
-        # TODO: this shit here
-        pred_labels = torch.LongTensor(pred_labels)
+                # Predict on the batch
+                pred_label = self.model.predict(x)
+                # Convert to label
+                pred_label = onehot_to_label(pred_label.detach().cpu().numpy())
+                pred_label = torch.tensor(pred_label)
+                
+                pred_labels[it*self.batch_size:(it + 1)*self.batch_size] = pred_label
         
         return pred_labels
     
