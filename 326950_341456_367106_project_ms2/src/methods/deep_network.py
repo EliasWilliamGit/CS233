@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import TensorDataset, DataLoader
+from src.utils import *
 
 ## MS2
     
@@ -72,6 +73,12 @@ class CNN(nn.Module):
         #### WRITE YOUR CODE HERE! 
         ###
         ##
+        # Definition of the layers
+        self.conv2d1 = nn.Conv2d(in_channels = input_channels, out_channels = 6, kernel_size = 3, padding = 1)
+        self.conv2d2 = nn.Conv2d(in_channels = 6, out_channels = 16, kernel_size = 3, padding = 1)
+        self.fc1 = nn.Linear(in_features=1024, out_features=128)
+        self.fc2 = nn.Linear(in_features=128, out_features=64)
+        self.fc3 = nn.Linear(in_features=64, out_features=n_classes)
         
     def forward(self, x):
         """
@@ -88,7 +95,23 @@ class CNN(nn.Module):
         #### WRITE YOUR CODE HERE! 
         ###
         ##
+        # Forward pass through the network
+        print(x.shape)
+        x = F.relu(self.conv2d1(x))
+        x = F.max_pool2d(kernel_size=2, input=x)
+        x = F.relu(self.conv2d2(x))
+        x = F.max_pool2d(kernel_size=2, input=x)
+        x = x.flatten(-3)
+
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        preds = self.fc3(x)
+
         return preds
+    
+    def predict(self, x):
+        print(x)
+        return F.softmax(self.forward(x))
 
 
 class Trainer(object):
@@ -114,7 +137,7 @@ class Trainer(object):
         self.batch_size = batch_size
 
         self.criterion = nn.CrossEntropyLoss()
-        self.optimizer = ...  ### WRITE YOUR CODE HERE
+        self.optimizer = torch.optim.Adam(model.parameters(), lr = lr)
 
     def train_all(self, dataloader):
         """
@@ -126,12 +149,15 @@ class Trainer(object):
         Arguments:
             dataloader (DataLoader): dataloader for training data
         """
+        # Put model in training mode
+        self.model.train()
         for ep in range(self.epochs):
-            self.train_one_epoch(dataloader)
+            
+            self.train_one_epoch(dataloader, ep)
 
             ### WRITE YOUR CODE HERE if you want to do add else at each epoch
 
-    def train_one_epoch(self, dataloader):
+    def train_one_epoch(self, dataloader, ep):
         """
         Train the model for ONE epoch.
 
@@ -140,12 +166,40 @@ class Trainer(object):
 
         Arguments:
             dataloader (DataLoader): dataloader for training data
+            ep (int): current epoch for prints
         """
         ##
         ###
         #### WRITE YOUR CODE HERE! 
         ###
         ##
+        for it, batch in enumerate(dataloader):
+            # 5.1 Load a batch, break it down in images and targets.
+            x, y = batch
+            y = torch.tensor(y, dtype=torch.int64)
+
+            # 5.2 Run forward pass.
+            logits = self.model.forward(x)
+            
+            # 5.3 Compute loss (using 'criterion').
+
+            loss = self.criterion(logits, y)
+            
+            # 5.4 Run backward pass.
+            loss.backward()  ### WRITE YOUR CODE HERE^
+            
+            # 5.5 Update the weights using 'optimizer'.
+            self.optimizer.step()  ### WRITE YOUR CODE HERE
+            
+            # 5.6 Zero-out the accumulated gradients.
+            self.optimizer.zero_grad()  ### WRITE YOUR CODE HERE^
+
+            # TODO: change this print
+            if it == 0:
+                print('\rEp {}/{}, it {}/{}: loss train: {:.2f}, accuracy train: {:.2f}'.
+                    format(ep + 1, self.epochs, it + 1, len(dataloader), loss,
+                            accuracy_fn(onehot_to_label(logits.detach().numpy()), y.detach().numpy())), end='')
+
 
     def predict_torch(self, dataloader):
         """
@@ -169,6 +223,25 @@ class Trainer(object):
         #### WRITE YOUR CODE HERE! 
         ###
         ##
+
+        pred_labels = []
+
+        # Evaluation mode
+        self.model.eval()
+
+        with torch.no_grad():
+            # Loop over all batches in the val/test set
+            for it, batch in enumerate(dataloader):
+                x = batch[0]
+                print(type(x))
+                pred_label = self.model.predict(x)
+                pred_labels.extend(pred_label)
+                print(pred_label)
+
+        # Convert to tensor
+        # TODO: this shit here
+        pred_labels = torch.LongTensor(pred_labels)
+        
         return pred_labels
     
     def fit(self, training_data, training_labels):

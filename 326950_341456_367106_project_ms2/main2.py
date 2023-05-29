@@ -7,7 +7,7 @@ from src.data import load_data
 from src.methods.dummy_methods import DummyClassifier
 from src.methods.pca import PCA
 from src.methods.deep_network import MLP, CNN, Trainer
-from src.utils import normalize_fn, append_bias_term, accuracy_fn, macrof1_fn, get_n_classes
+from src.utils import normalize_fn, append_bias_term, accuracy_fn, macrof1_fn, get_n_classes, label_to_onehot
 
 
 def main(args):
@@ -19,11 +19,8 @@ def main(args):
         args (Namespace): arguments that were parsed from the command line (see at the end 
                           of this file). Their value can be accessed as "args.argument".
     """
-    ## 1. First, we load our data and flatten the images into vectors
+    ## 1. First, we load our images
     xtrain, xtest, ytrain, ytest = load_data(args.data)
-    xtrain = xtrain.reshape(xtrain.shape[0], -1)
-    xtest = xtest.reshape(xtest.shape[0], -1)
-
 
     ## 2. Then we must prepare it. This is were you can create a validation set,
     #  normalize, add bias, etc.
@@ -55,15 +52,17 @@ def main(args):
     xtrain = normalize_fn(xtrain, mean, std)
     xtest = normalize_fn(xtest, mean , std)
 
+
     if not args.test:
         xval = normalize_fn(xval, mean, std)
 
+    """
     # Append a bias term to the data
     xtrain = append_bias_term(xtrain)
     xtest = append_bias_term(xtest)
     if not args.test:
         xval = append_bias_term(xval)
-
+    """
 
     # Dimensionality reduction (MS2)
     if args.use_pca:
@@ -81,12 +80,21 @@ def main(args):
         # Prepare the model (and data) for Pytorch
         # Note: you might need to reshape the image data depending on the network you use!
         n_classes = get_n_classes(ytrain)
+        input_channels = 1
+
+        # Add channel dimension to image
+        xtrain = xtrain[:,np.newaxis,:,:]
+        xtest = xtest[:,np.newaxis,:,:]
+        if not args.test:
+            xval = xval[:,np.newaxis,:,:]
+
+        print(f"Shape of data after newaxis: {xtrain.shape}")
         if args.nn_type == "mlp":
             model = ...  ### WRITE YOUR CODE HERE
 
         elif args.nn_type == "cnn":
             ### WRITE YOUR CODE HERE
-            ...
+            model = CNN(input_channels=input_channels, n_classes=n_classes)
         
         summary(model)
 
