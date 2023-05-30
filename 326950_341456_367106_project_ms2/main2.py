@@ -67,6 +67,7 @@ def main(args):
     # Dimensionality reduction (MS2)
     if args.use_pca:
         print("Using PCA")
+        # OBS. FLATTEN DATA BEFORE RUNNING, see main.py from first handin // ELIAS
         pca_obj = PCA(d=args.pca_d)
         ### WRITE YOUR CODE HERE: use the PCA object to reduce the dimensionality of the data
 
@@ -80,20 +81,21 @@ def main(args):
         # Prepare the model (and data) for Pytorch
         # Note: you might need to reshape the image data depending on the network you use!
         n_classes = get_n_classes(ytrain)
-        input_channels = 1
 
-        # Add channel dimension to image
-        xtrain = xtrain[:,np.newaxis,:,:]
-        xtest = xtest[:,np.newaxis,:,:]
-        if not args.test:
-            xval = xval[:,np.newaxis,:,:]
-
-        print(f"Shape of data after newaxis: {xtrain.shape}")
         if args.nn_type == "mlp":
+            # OBS. FLATTEN DATA BEFORE RUNNING, see main.py from first handin // ELIAS
             model = ...  ### WRITE YOUR CODE HERE
 
         elif args.nn_type == "cnn":
             ### WRITE YOUR CODE HERE
+            input_channels = 1
+
+            # Add channel dimension to image (For pythorch to work)
+            xtrain = xtrain[:,np.newaxis,:,:]
+            xtest = xtest[:,np.newaxis,:,:]
+            if not args.test:
+                xval = xval[:,np.newaxis,:,:]
+            
             model = CNN(input_channels=input_channels, n_classes=n_classes)
         
         summary(model)
@@ -108,7 +110,7 @@ def main(args):
 
     ## 4. Train and evaluate the method
 
-    # Fit (:=train) the method on the training data
+    # Fit (:=train) the method on the training data TODO: add validation data here for cross val accuracy, maybe bool
     preds_train = method_obj.fit(xtrain, ytrain)
         
     # Predict on unseen data

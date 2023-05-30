@@ -137,6 +137,10 @@ class Trainer(object):
         self.criterion = nn.CrossEntropyLoss()
         self.optimizer = torch.optim.Adam(model.parameters(), lr = lr)
 
+        self.loss_list=[]
+        self.train_acc_list=[]
+        self.val_acc_list=[]
+
     def train_all(self, dataloader):
         """
         Fully train the model over the epochs. 
