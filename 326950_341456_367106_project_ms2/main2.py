@@ -8,6 +8,7 @@ from src.methods.dummy_methods import DummyClassifier
 from src.methods.pca import PCA
 from src.methods.deep_network import MLP, CNN, Trainer
 from src.utils import normalize_fn, append_bias_term, accuracy_fn, macrof1_fn, get_n_classes, label_to_onehot
+import matplotlib.pyplot as plt
 
 
 def main(args):
@@ -101,7 +102,8 @@ def main(args):
         summary(model)
 
         # Trainer object
-        method_obj = Trainer(model, lr=args.lr, epochs=args.max_iters, batch_size=args.nn_batch_size)
+        method_obj = Trainer(model, lr=args.lr, epochs=args.max_iters, batch_size=args.nn_batch_size,
+                             weight_decay=args.weight_decay, use_lr_scheduler=args.use_lr_scheduler)
     
     # Follow the "DummyClassifier" example for your methods (MS1)
     elif args.method == "dummy_classifier":
@@ -111,7 +113,10 @@ def main(args):
     ## 4. Train and evaluate the method
 
     # Fit (:=train) the method on the training data TODO: add validation data here for cross val accuracy, maybe bool
-    preds_train = method_obj.fit(xtrain, ytrain)
+    if args.test:
+        preds_train = method_obj.fit(xtrain, ytrain)
+    else:
+        preds_train = method_obj.fit_val(xtrain, ytrain, xval, yval)
         
     # Predict on unseen data
     if args.test:
@@ -153,6 +158,21 @@ def main(args):
         if args.nn_type == "mlp":
             return
         elif args.nn_type == "cnn":
+            val_acc_list, train_acc_list, loss_list = method_obj.get_training_info()
+            epoch_list = list(range(1, len(val_acc_list) + 1))
+
+            fig, ax = plt.subplots(2, 1, figsize=(6,6))
+            ax[0].plot(epoch_list, train_acc_list, color="r", label="Training accuracy")
+            ax[0].plot(epoch_list, val_acc_list, color="b", label="Validation accuracy")
+            ax[0].set_xlabel("Epoch")
+            ax[0].set_ylabel("Accuracy")
+            ax[0].legend()
+
+            ax[1].plot(epoch_list, loss_list, color="b")
+            ax[1].set_xlabel("Epoch")
+            ax[1].set_ylabel("Loss value")
+
+            plt.show()
             return
         
 
@@ -184,6 +204,8 @@ if __name__ == '__main__':
     parser.add_argument('--pca_d', type=int, default=200, help="output dimensionality after PCA")
     parser.add_argument('--nn_type', default="mlp", help="which network to use, can be 'mlp' or 'cnn'")
     parser.add_argument('--nn_batch_size', type=int, default=64, help="batch size for NN training")
+    parser.add_argument('--use_lr_scheduler', action="store_true", help="Reduce learning rate with training")
+    parser.add_argument('--weight_decay', type=float, default=0, help="Value for the regularization term during training")
 
     # "args" will keep in memory the arguments and their values,
     # which can be accessed as "args.data", for example.

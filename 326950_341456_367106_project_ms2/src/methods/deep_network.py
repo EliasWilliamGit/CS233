@@ -119,7 +119,7 @@ class Trainer(object):
     It will also serve as an interface between numpy and pytorch.
     """
 
-    def __init__(self, model, lr, epochs, batch_size):
+    def __init__(self, model, lr, epochs, batch_size, weight_decay = 0, use_lr_scheduler = False):
         """
         Initialize the trainer object for a given model.
 
@@ -133,15 +133,23 @@ class Trainer(object):
         self.epochs = epochs
         self.model = model
         self.batch_size = batch_size
+        self.weight_decay = weight_decay
+        self.use_lr_scheduler = use_lr_scheduler
 
         self.criterion = nn.CrossEntropyLoss()
-        self.optimizer = torch.optim.Adam(model.parameters(), lr = lr)
+        self.optimizer = torch.optim.Adam(model.parameters(), lr = lr, weight_decay=weight_decay)
+        if use_lr_scheduler:
+            self.lr_scheduler = torch.optim.lr_scheduler.LinearLR(self.optimizer, start_factor=1.0, end_factor=0.1, total_iters= self.epochs - 1)
 
         self.loss_list=[]
         self.train_acc_list=[]
         self.val_acc_list=[]
 
-    def train_all(self, dataloader):
+    def get_training_info(self):
+        
+        return self.val_acc_list, self.train_acc_list, self.loss_list
+
+    def train_all(self, dataloader_train, dataloader_val=False):
         """
         Fully train the model over the epochs. 
         
@@ -151,14 +159,60 @@ class Trainer(object):
         Arguments:
             dataloader (DataLoader): dataloader for training data
         """
-        # Put model in training mode
         self.model.train()
+        # Put model in training mode
         for ep in range(self.epochs):
-            
-            self.train_one_epoch(dataloader, ep)
+            self.train_one_epoch(dataloader_train, ep)
 
             ### WRITE YOUR CODE HERE if you want to do add else at each epoch
-            # TODO: Change learning rate after x epochs, also save loss for visual
+
+            # Reduce learning rate if we use learning rate scheduler
+            if self.use_lr_scheduler:
+                self.lr_scheduler.step()
+
+            if dataloader_val:
+                # Validate model at each epoch
+                self.val_one_epoch(dataloader_val, ep)
+            
+    def val_one_epoch(self, dataloader,ep):
+        """
+        Validate the model for ONE epoch.
+
+        Should loop over the batches in the dataloader.
+
+        Arguments:
+            dataloader (DataLoader): dataloader for validation data
+            ep (int): current epoch for prints
+        """
+        self.model.eval()
+
+        with torch.no_grad():
+            # Loop over all batches in the val/test set
+            acc_run = 0
+
+            for it, batch in enumerate(dataloader):
+                x,y = batch
+                if torch.cuda.is_available():
+                    y = y.type(torch.cuda.LongTensor)
+                else:
+                    y = y.type(torch.LongTensor)
+
+                # Predict on the batch
+                logits = self.model.predict(x)
+
+                curr_bs = x.shape[0]
+                acc_run += accuracy_fn(onehot_to_label(logits.detach().cpu().numpy()), y.detach().cpu().numpy()) * curr_bs
+                
+        acc = acc_run / len(dataloader.dataset)
+
+        # Add them to list for validation later
+        self.val_acc_list.append(acc)
+
+        # Print performance
+        print(f'Ep {ep+ 1}/{self.epochs}: accuracy val: {acc}')
+
+        self.model.train()
+
 
     def train_one_epoch(self, dataloader, ep):
         """
@@ -205,10 +259,15 @@ class Trainer(object):
 
             curr_bs = x.shape[0]
             acc_run += accuracy_fn(onehot_to_label(logits.detach().cpu().numpy()), y.detach().cpu().numpy()) * curr_bs
-            loss_run += loss * curr_bs
+            loss_run += loss.item() * curr_bs
 
         acc = acc_run / len(dataloader.dataset)
         loss_mean = loss_run / len(dataloader.dataset)
+
+        # Add them to list for validation later
+        self.train_acc_list.append(acc)
+        self.loss_list.append(loss_mean)
+
         # Print performance
         print(f'Ep {ep+ 1}/{self.epochs}: loss train: {loss_mean}, accuracy train: {acc}')
 
@@ -274,6 +333,32 @@ class Trainer(object):
         train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
         
         self.train_all(train_dataloader)
+
+        return self.predict(training_data)
+    
+    def fit_val(self, training_data, training_labels, validation_data, validation_labels):
+        """
+        Trains the model, returns predicted labels for training data.
+
+        This serves as an interface between numpy and pytorch.
+
+        Arguments:
+            training_data (array): training data of shape (N,D)
+            training_labels (array): regression target of shape (N,)
+            validation_data (array): validation data of shape (N,D)
+            validation_labels (array): regression target of shape (N,)
+        Returns:
+            pred_labels (array): target of shape (N,)
+        """
+        # First, prepare data for pytorch
+        train_dataset = TensorDataset(torch.from_numpy(training_data).float(), 
+                                      torch.from_numpy(training_labels))
+        train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
+        val_dataset = TensorDataset(torch.from_numpy(validation_data).float(), 
+                                      torch.from_numpy(validation_labels))
+        val_dataloader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=True)
+        
+        self.train_all(train_dataloader, val_dataloader)
 
         return self.predict(training_data)
 
