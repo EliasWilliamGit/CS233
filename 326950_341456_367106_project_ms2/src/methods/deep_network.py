@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import TensorDataset, DataLoader
 from src.utils import *
-
+import timeit
 ## MS2
     
 class MLP(nn.Module):
@@ -332,7 +332,11 @@ class Trainer(object):
                                       torch.from_numpy(training_labels))
         train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
         
+        start = timeit.default_timer()
         self.train_all(train_dataloader)
+        stop = timeit.default_timer()
+
+        print(f"Time elapsed training: {stop - start} s")
 
         return self.predict(training_data)
     
@@ -358,7 +362,11 @@ class Trainer(object):
                                       torch.from_numpy(validation_labels))
         val_dataloader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=True)
         
+        start = timeit.default_timer()
         self.train_all(train_dataloader, val_dataloader)
+        stop = timeit.default_timer()
+
+        print(f"Time elapsed training, using the validation step: {stop - start} s")
 
         return self.predict(training_data)
 
@@ -377,7 +385,11 @@ class Trainer(object):
         test_dataset = TensorDataset(torch.from_numpy(test_data).float())
         test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False)
 
+        start = timeit.default_timer()
         pred_labels = self.predict_torch(test_dataloader)
+        stop = timeit.default_timer()
+
+        print(f"Time elapsed inference: {stop - start} s")
 
         # We return the labels after transforming them into numpy array.
         return pred_labels.numpy()

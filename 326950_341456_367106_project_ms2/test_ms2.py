@@ -51,7 +51,7 @@ class TestProject(unittest.TestCase):
         self.assertTrue(project_path.exists(), f"No folder found at {project_path}")
 
         # Main files
-        for file in ["main.py", "report.pdf"]:
+        for file in ["main2.py", "report.pdf"]:
             with self.subTest(f"Checking file {file}"):
                 self.assertTrue((project_path / file).exists(), f"No file {file} found at {project_path}")
         

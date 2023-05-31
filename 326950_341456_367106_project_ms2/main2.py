@@ -89,6 +89,10 @@ def main(args):
 
         elif args.nn_type == "cnn":
             ### WRITE YOUR CODE HERE
+            if args.use_pca:
+                print("Cannot use PCA with CNN.")
+                return
+            
             input_channels = 1
 
             # Add channel dimension to image (For pythorch to work)
