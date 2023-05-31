@@ -16,7 +16,7 @@ class MLP(nn.Module):
     def __init__(self, input_size, n_classes):
         """
         Initialize the network.
-        
+            
         You can add arguments if you want, but WITH a default value, e.g.:
             __init__(self, input_size, n_classes, my_arg=32)
         
@@ -30,6 +30,11 @@ class MLP(nn.Module):
         #### WRITE YOUR CODE HERE! 
         ###
         ##
+        # Check if the 
+        self.fc1 = nn.Linear(in_features = input_size, out_features = 400) # First fully connected layer
+        self.fc2 = nn.Linear(in_features = 400, out_features = 100) # Second fully connected layer 
+        self.fc3 = nn.Linear(in_features = 100, out_features = n_classes) # Output layer
+
         
     def forward(self, x):
         """
@@ -46,6 +51,9 @@ class MLP(nn.Module):
         #### WRITE YOUR CODE HERE! 
         ###
         ##
+        x = F.relu(self.fc1(x)) # Apply ReLU activation to the first layer output
+        x = F.relu(self.fc2(x)) # Apply ReLU activation to the second layer output
+        preds = self.fc3(x) # Output layer (no activation function)
         return preds
 
 

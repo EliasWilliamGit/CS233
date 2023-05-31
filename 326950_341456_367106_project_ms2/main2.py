@@ -84,8 +84,13 @@ def main(args):
         n_classes = get_n_classes(ytrain)
 
         if args.nn_type == "mlp":
-            # OBS. FLATTEN DATA BEFORE RUNNING, see main.py from first handin // ELIAS
-            model = ...  ### WRITE YOUR CODE HERE
+            input_size = get_n_classes()
+
+            ### WRITE YOUR CODE HERE
+            # FLATTEN DATA BEFORE RUNNING
+            xtrain = xtrain.reshape(xtrain.shape[0], -1)
+            xtest = xtest.reshape(xtest.shape[0], -1)
+            model = MLP(inout_size = input_size , n_classes= n_classes)  
 
         elif args.nn_type == "cnn":
             ### WRITE YOUR CODE HERE
