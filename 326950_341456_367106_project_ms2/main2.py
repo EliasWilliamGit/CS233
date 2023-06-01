@@ -84,7 +84,7 @@ def main(args):
         n_classes = get_n_classes(ytrain)
 
         if args.nn_type == "mlp":
-            input_size = get_n_classes()
+            input_size = 1024
 
             ### WRITE YOUR CODE HERE
             # FLATTEN DATA BEFORE RUNNING
@@ -165,7 +165,23 @@ def main(args):
         return
     if args.method == "nn":
         if args.nn_type == "mlp":
+            val_acc_list, train_acc_list, loss_list = method_obj.get_training_info()
+            epoch_list = list(range(1, len(val_acc_list) + 1))
+
+            fig, ax = plt.subplots(2, 1, figsize=(6,6))
+            ax[0].plot(epoch_list, train_acc_list, color="r", label="Training accuracy")
+            ax[0].plot(epoch_list, val_acc_list, color="b", label="Validation accuracy")
+            ax[0].set_xlabel("Epoch")
+            ax[0].set_ylabel("Accuracy")
+            ax[0].legend()
+
+            ax[1].plot(epoch_list, loss_list, color="b")
+            ax[1].set_xlabel("Epoch")
+            ax[1].set_ylabel("Loss value")
+
+            plt.show()
             return
+        
         elif args.nn_type == "cnn":
             val_acc_list, train_acc_list, loss_list = method_obj.get_training_info()
             epoch_list = list(range(1, len(val_acc_list) + 1))
