@@ -38,11 +38,37 @@ class PCA(object):
         Returns:
             exvar (float): explained variance of the kept dimensions (in percentage, i.e., in [0,100])
         """
-        ##
-        ###
-        #### WRITE YOUR CODE HERE! 
-        ###
-        ##
+        
+        # Compute the mean of data
+        self.mean = np.mean(training_data, axis=0).reshape(1,-1)
+
+        # Center the data with the mean
+        training_data_tilde = training_data - self.mean
+
+        # Create the covariance matrix
+        C = np.cov(training_data_tilde, rowvar=False)
+
+        # Compute the eigenvectors and eigenvalues. Hint: look into np.linalg.eigh()
+        eigvals, eigvecs = np.linalg.eigh(C)
+
+        # Choose the top d eigenvalues and corresponding eigenvectors. 
+        sorted_id = np.argsort(eigvals)[::-1]
+        sorted_d_id = sorted_id[:self.d] #The resulting sorted_n_indices array contains the indices of the d largest eigenvalues.
+       
+        sorted_eigvals = eigvals[sorted_d_id]
+        sorted_eigvecs = eigvecs[:, sorted_d_id]
+
+        self.W = sorted_eigvecs
+        sorted_d_eigvals = sorted_eigvals
+    
+        total_variance = np.sum(sorted_eigvals)
+        explained_variance = (sorted_eigvals / np.sum(sorted_eigvals)) * 100
+
+        # Compute the explained variance
+        exvar = 100 * np.sum(sorted_d_eigvals)/np.sum(eigvals)
+        # calculates the explained variance as a percentage. The numerator np.sum(eigvals) computes the sum of the selected 
+        # eigenvalues (i.e., the top d eigenvalues), while the denominator np.sum(eigvals_full) computes the sum of all the eigenvalues.
+
         return exvar
 
     def reduce_dimension(self, data):
