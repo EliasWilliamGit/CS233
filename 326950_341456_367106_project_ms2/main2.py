@@ -68,16 +68,18 @@ def main(args):
     # Dimensionality reduction (MS2)
     if args.use_pca:
         print("Using PCA")
-        xtrain = xtrain.reshape(xval.shape[0], -1)
-        xtest = xtest.reshape(xval.shape[0], -1)
+        xtrain = xtrain.reshape(xtrain.shape[0], -1)
+        xtest = xtest.reshape(xtest.shape[0], -1)
         if not args.test:
             xval = xval.reshape(xval.shape[0], -1)
         # OBS. FLATTEN DATA BEFORE RUNNING, see main.py from first handin // ELIAS
         pca_obj = PCA(d=args.pca_d)
         ### Use the PCA object to reduce the dimensionality of the data
-        pca_obj.find_principal_components(train_data)
-        train_data = pca_obj.reduce_dimension(train_data)
-        test_data = pca_obj.reduce_dimension(test_data)
+        pca_obj.find_principal_components(xtrain)
+        xtrain = pca_obj.reduce_dimension(xtrain)
+        xtest = pca_obj.reduce_dimension(xtest)
+        if not args.test:
+            xval = pca_obj.reduce_dimension(xval)
 
 
     ## 3. Initialize the method you want to use.

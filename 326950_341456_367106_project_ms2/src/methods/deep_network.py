@@ -340,6 +340,7 @@ class Trainer(object):
             pred_labels (array): target of shape (N,)
         """
         # First, prepare data for pytorch
+
         train_dataset = TensorDataset(torch.from_numpy(training_data).float(), 
                                       torch.from_numpy(training_labels))
         train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
