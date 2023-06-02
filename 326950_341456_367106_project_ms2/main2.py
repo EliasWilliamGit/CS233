@@ -84,13 +84,17 @@ def main(args):
         n_classes = get_n_classes(ytrain)
 
         if args.nn_type == "mlp":
-            input_size = 1024
 
             ### WRITE YOUR CODE HERE
             # FLATTEN DATA BEFORE RUNNING
             xtrain = xtrain.reshape(xtrain.shape[0], -1)
             xtest = xtest.reshape(xtest.shape[0], -1)
-            model = MLP(inout_size = input_size , n_classes= n_classes)  
+            if not args.test:
+                xval = xval.reshape(xval.shape[0], -1)
+            input_size = xtrain.shape[1]
+            model = MLP(input_size = input_size , n_classes= n_classes)  
+
+            
 
         elif args.nn_type == "cnn":
             ### WRITE YOUR CODE HERE
@@ -202,10 +206,6 @@ def main(args):
         
 
     
-
-
-
-
 if __name__ == '__main__':
     # Definition of the arguments that can be given through the command line (terminal).
     # If an argument is not given, it will take its default value as defined below.
