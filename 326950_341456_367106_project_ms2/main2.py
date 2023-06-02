@@ -68,6 +68,10 @@ def main(args):
     # Dimensionality reduction (MS2)
     if args.use_pca:
         print("Using PCA")
+        xtrain = xtrain.reshape(xval.shape[0], -1)
+        xtest = xtest.reshape(xval.shape[0], -1)
+        if not args.test:
+            xval = xval.reshape(xval.shape[0], -1)
         # OBS. FLATTEN DATA BEFORE RUNNING, see main.py from first handin // ELIAS
         pca_obj = PCA(d=args.pca_d)
         ### Use the PCA object to reduce the dimensionality of the data
@@ -87,13 +91,15 @@ def main(args):
         n_classes = get_n_classes(ytrain)
 
         if args.nn_type == "mlp":
-            input_size = get_n_classes()
 
             ### WRITE YOUR CODE HERE
             # FLATTEN DATA BEFORE RUNNING
             xtrain = xtrain.reshape(xtrain.shape[0], -1)
             xtest = xtest.reshape(xtest.shape[0], -1)
-            model = MLP(inout_size = input_size , n_classes= n_classes)  
+            if not args.test:
+                xval = xval.reshape(xval.shape[0], -1)
+            input_size = xtrain.shape[1]
+            model = MLP(input_size = input_size , n_classes= n_classes)   
 
         elif args.nn_type == "cnn":
             ### WRITE YOUR CODE HERE
