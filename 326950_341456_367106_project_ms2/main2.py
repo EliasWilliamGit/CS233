@@ -68,14 +68,12 @@ def main(args):
     # Dimensionality reduction (MS2)
     if args.use_pca:
         print("Using PCA")
-        xtrain = xtrain.reshape(xtrain.shape[0], -1)
-        xtest = xtest.reshape(xtest.shape[0], -1)
-        if not args.test:
-            xval = xval.reshape(xval.shape[0], -1)
-            
         # OBS. FLATTEN DATA BEFORE RUNNING, see main.py from first handin // ELIAS
         pca_obj = PCA(d=args.pca_d)
-        ### WRITE YOUR CODE HERE: use the PCA object to reduce the dimensionality of the data
+        ### Use the PCA object to reduce the dimensionality of the data
+        pca_obj.find_principal_components(train_data)
+        train_data = pca_obj.reduce_dimension(train_data)
+        test_data = pca_obj.reduce_dimension(test_data)
 
 
     ## 3. Initialize the method you want to use.
@@ -89,17 +87,13 @@ def main(args):
         n_classes = get_n_classes(ytrain)
 
         if args.nn_type == "mlp":
+            input_size = get_n_classes()
 
             ### WRITE YOUR CODE HERE
             # FLATTEN DATA BEFORE RUNNING
             xtrain = xtrain.reshape(xtrain.shape[0], -1)
             xtest = xtest.reshape(xtest.shape[0], -1)
-            if not args.test:
-                xval = xval.reshape(xval.shape[0], -1)
-            input_size = xtrain.shape[1]
-            model = MLP(input_size = input_size , n_classes= n_classes)  
-
-            
+            model = MLP(inout_size = input_size , n_classes= n_classes)  
 
         elif args.nn_type == "cnn":
             ### WRITE YOUR CODE HERE
@@ -174,23 +168,7 @@ def main(args):
         return
     if args.method == "nn":
         if args.nn_type == "mlp":
-            val_acc_list, train_acc_list, loss_list = method_obj.get_training_info()
-            epoch_list = list(range(1, len(val_acc_list) + 1))
-
-            fig, ax = plt.subplots(2, 1, figsize=(6,6))
-            ax[0].plot(epoch_list, train_acc_list, color="r", label="Training accuracy")
-            ax[0].plot(epoch_list, val_acc_list, color="b", label="Validation accuracy")
-            ax[0].set_xlabel("Epoch")
-            ax[0].set_ylabel("Accuracy")
-            ax[0].legend()
-
-            ax[1].plot(epoch_list, loss_list, color="b")
-            ax[1].set_xlabel("Epoch")
-            ax[1].set_ylabel("Loss value")
-
-            plt.show()
             return
-        
         elif args.nn_type == "cnn":
             val_acc_list, train_acc_list, loss_list = method_obj.get_training_info()
             epoch_list = list(range(1, len(val_acc_list) + 1))
@@ -211,6 +189,10 @@ def main(args):
         
 
     
+
+
+
+
 if __name__ == '__main__':
     # Definition of the arguments that can be given through the command line (terminal).
     # If an argument is not given, it will take its default value as defined below.
