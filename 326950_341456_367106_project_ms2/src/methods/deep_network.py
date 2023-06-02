@@ -55,6 +55,10 @@ class MLP(nn.Module):
         x = F.relu(self.fc2(x)) # Apply ReLU activation to the second layer output
         preds = self.fc3(x) # Output layer (no activation function)
         return preds
+    
+    def predict(self, x):
+        return F.softmax(self.forward(x), dim=1)
+
 
 
 class CNN(nn.Module):
