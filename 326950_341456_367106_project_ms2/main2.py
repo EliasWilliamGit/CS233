@@ -68,19 +68,20 @@ def main(args):
     # Dimensionality reduction (MS2)
     if args.use_pca:
         print("Using PCA")
+        # Flattening the data before running PCA
         xtrain = xtrain.reshape(xtrain.shape[0], -1)
         xtest = xtest.reshape(xtest.shape[0], -1)
         if not args.test:
             xval = xval.reshape(xval.shape[0], -1)
-        # OBS. FLATTEN DATA BEFORE RUNNING, see main.py from first handin // ELIAS
+        d=args.pca_d
         pca_obj = PCA(d=args.pca_d)
         ### Use the PCA object to reduce the dimensionality of the data
-        pca_obj.find_principal_components(xtrain)
+        var = pca_obj.find_principal_components(xtrain)
         xtrain = pca_obj.reduce_dimension(xtrain)
         xtest = pca_obj.reduce_dimension(xtest)
         if not args.test:
             xval = pca_obj.reduce_dimension(xval)
-
+        print(f"Explained Variance for d={d} dimensions (D=1024) : {var:.3f}%")
 
     ## 3. Initialize the method you want to use.
 
@@ -94,8 +95,7 @@ def main(args):
 
         if args.nn_type == "mlp":
 
-            ### WRITE YOUR CODE HERE
-            # FLATTEN DATA BEFORE RUNNING
+            # Flattening the data before running 
             xtrain = xtrain.reshape(xtrain.shape[0], -1)
             xtest = xtest.reshape(xtest.shape[0], -1)
             if not args.test:
@@ -104,7 +104,6 @@ def main(args):
             model = MLP(input_size = input_size , n_classes= n_classes)   
 
         elif args.nn_type == "cnn":
-            ### WRITE YOUR CODE HERE
             if args.use_pca:
                 print("Cannot use PCA with CNN.")
                 return
@@ -172,8 +171,35 @@ def main(args):
         print("ERROR: Cannot do visualize and test at the same time")
         return
     
-    if args.method == "use_pca":
+    if args.pca_d_visualize :
+        # Flattening the data before running PCA
+        xtrain = xtrain.reshape(xtrain.shape[0], -1)
+        xtest = xtest.reshape(xtest.shape[0], -1)
+        if not args.test:
+            xval = xval.reshape(xval.shape[0], -1)
+        
+        # Plot of the total variance explained by the first d principal components
+
+        # Creating the var array with the explained variance for each dimension (from 2 to d)
+        i=0
+        var = np.empty((args.pca_d, 2))
+        for a in range(2, args.pca_d):
+            pca_obj = PCA(a)
+            var[i,0] = i
+            var[i,1] = pca_obj.find_principal_components(xtrain)
+            i += 1
+
+        # Plot
+        x = var[:,0] 
+        y = var[:,1] 
+
+        plt.bar(x, y)
+        plt.xlabel('Number of Principal Components')
+        plt.ylabel('Explained Variance (%)')
+        plt.title('Explained Variance of the d Principal Components')
+        plt.show()
         return
+    
     if args.method == "nn":
         if args.nn_type == "mlp":
             return
@@ -206,7 +232,7 @@ if __name__ == '__main__':
     # If an argument is not given, it will take its default value as defined below.
     parser = argparse.ArgumentParser()
     parser.add_argument('--data', default="dataset_HASYv2", type=str, help="the path to wherever you put the data, if it's in the parent folder, you can use ../dataset_HASYv2")
-    parser.add_argument('--method', default="dummy_classifier", type=str, help="dummy_classifier / kmeans / logistic_regression / svm / nn (MS2)")
+    parser.add_argument('--method', default="dummy_classifier", type=str, help="dummy_classifier / kmeans / logistic_regression / svm / pca (MS2) / nn (MS2)")
     parser.add_argument('--K', type=int, default=10, help="number of clusters for K-Means")
     parser.add_argument('--lr', type=float, default=1e-5, help="learning rate for methods with learning rate")
     parser.add_argument('--max_iters', type=int, default=100, help="max iters for methods which are iterative")
@@ -222,6 +248,7 @@ if __name__ == '__main__':
     # MS2 arguments
     parser.add_argument('--use_pca', action="store_true", help="to enable PCA")
     parser.add_argument('--pca_d', type=int, default=200, help="output dimensionality after PCA")
+    parser.add_argument('--pca_d_visualize', action="store_true", help="to visualize which d is the best for the train set")
     parser.add_argument('--nn_type', default="mlp", help="which network to use, can be 'mlp' or 'cnn'")
     parser.add_argument('--nn_batch_size', type=int, default=64, help="batch size for NN training")
     parser.add_argument('--use_lr_scheduler', action="store_true", help="Reduce learning rate with training")
