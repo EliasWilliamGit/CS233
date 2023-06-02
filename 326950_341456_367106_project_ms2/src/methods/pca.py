@@ -51,12 +51,13 @@ class PCA(object):
         # Compute the eigenvectors and eigenvalues. Hint: look into np.linalg.eigh()
         eigvals, eigvecs = np.linalg.eigh(C)
 
-        # Choose the top d eigenvalues and corresponding eigenvectors. 
+        # Choose the top d eigenvalues and corresponding eigenvectors. Sort the eigenvalues( with corresponding eigenvectors ) in decreasing order first.
         sorted_id = np.argsort(eigvals)[::-1]
         sorted_d_id = sorted_id[:self.d] #The resulting sorted_n_indices array contains the indices of the d largest eigenvalues.
 
+        # Create matrix W and the corresponding eigen values.
         sorted_d_eigvals = eigvals[sorted_d_id]
-        self.W = eigvecs[:, sorted_d_id]
+        self.W = eigvecs[:, sorted_d_id] #size D * d
 
         # Compute the explained variance
         exvar = 100 * np.sum(sorted_d_eigvals)/np.sum(eigvals)
@@ -74,11 +75,11 @@ class PCA(object):
         Returns:
             data_reduced (array): reduced data of shape (N,d)
         """
-        ##
-        ###
-        #### WRITE YOUR CODE HERE! 
-        ###
-        ##
-        return data_reduced
         
+        # Center the data with the mean
+        data_tilde = data - self.mean
 
+        # Reduce dimensionality of the data
+        data_reduced = data_tilde @ self.W
+        
+        return data_reduced
