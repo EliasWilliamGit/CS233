@@ -54,15 +54,9 @@ class PCA(object):
         # Choose the top d eigenvalues and corresponding eigenvectors. 
         sorted_id = np.argsort(eigvals)[::-1]
         sorted_d_id = sorted_id[:self.d] #The resulting sorted_n_indices array contains the indices of the d largest eigenvalues.
-       
-        sorted_eigvals = eigvals[sorted_d_id]
-        sorted_eigvecs = eigvecs[:, sorted_d_id]
 
-        self.W = sorted_eigvecs
-        sorted_d_eigvals = sorted_eigvals
-    
-        total_variance = np.sum(sorted_eigvals)
-        explained_variance = (sorted_eigvals / np.sum(sorted_eigvals)) * 100
+        sorted_d_eigvals = eigvals[sorted_d_id]
+        self.W = eigvecs[:, sorted_d_id]
 
         # Compute the explained variance
         exvar = 100 * np.sum(sorted_d_eigvals)/np.sum(eigvals)
