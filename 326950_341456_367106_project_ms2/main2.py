@@ -68,6 +68,11 @@ def main(args):
     # Dimensionality reduction (MS2)
     if args.use_pca:
         print("Using PCA")
+        xtrain = xtrain.reshape(xtrain.shape[0], -1)
+        xtest = xtest.reshape(xtest.shape[0], -1)
+        if not args.test:
+            xval = xval.reshape(xval.shape[0], -1)
+            
         # OBS. FLATTEN DATA BEFORE RUNNING, see main.py from first handin // ELIAS
         pca_obj = PCA(d=args.pca_d)
         ### WRITE YOUR CODE HERE: use the PCA object to reduce the dimensionality of the data
